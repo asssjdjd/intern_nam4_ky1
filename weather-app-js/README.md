@@ -24,3 +24,5 @@
 + let ctx = canvas.getContext('2d') : lấy được context
 +  ctx.fillText(value + unit, x + barWidth / 2, y - 5) : Để thêm text
 + ctx.fillRect(x, y, barWidth, barHeight): để vẽ cột 
+
+5. Để xem demo truy cập theo link này : https://asssjdjd.github.io/intern_nam4_ky1/weather-app-js/

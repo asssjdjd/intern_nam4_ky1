@@ -5,16 +5,20 @@ const LANGUAGE = "vi";
 
 // khi người dùng ấn tìm kiếm theo tên.
 $("#search-button").click(async () => {
+  $("#message").text(``);
   let cityName = $("#input-city").val();
   console.log(cityName)
   cityName = normalizeCityName(cityName);
   console.log(cityName);
-  if (cityName) {
+  if (cityName && cityName !== null && cityName !== "") {
     const data = await fetchWeatherData(cityName);
-    await displayCurrentWeather(data);
-    await drawForecastChart(data,["Nhiệt độ", "Độ ẩm", "Tốc độ gió"]);
+      $("#message").text(``);
+      await displayCurrentWeather(data);
+      await drawForecastChart(data,["Nhiệt độ", "Độ ẩm", "Tốc độ gió"]);
+
   } else {
     // Hiển thị thông báo yêu cầu nhập tên thành phố
+    $("#message").text(`Vui lòng nhập tên thành phố`);
   }
 });
 
@@ -47,14 +51,16 @@ const displayCurrentWeather = async (data) => {
     humidity: data.current.humidity,
     windSpeed: data.current.wind_kph,
   };
+
+  $("#today-weather").text(`Thời tiết hôm nay : ${currentWeather.time.split(" ")[0].split("-").reverse().join("-")}`)
   $("#current-temp").text(`Nhiệt độ hiện tại : ${currentWeather.temp} °C`);
-  $("#current-time").text(`Thời gian hiện tại : ${currentWeather.time}`);
+  $("#current-time").text(`Thời gian hiện tại : ${currentWeather.time.split(" ")[1]}`);
   $("#current-condition").text(
     `Thời tiết hiện tại : ${currentWeather.condition}`
   );
-  $("#current-humidity").text(`Độ ẩm hiện tại : ${currentWeather.humidity}`);
+  $("#current-humidity").text(`Độ ẩm hiện tại : ${currentWeather.humidity}%`);
   $("#current-windSpeed").text(
-    `Tốc độ gió hiện tại : ${currentWeather.windSpeed}`
+    `Tốc độ gió  hiện tại : ${currentWeather.windSpeed}km/h`
   );
   $("#location").text(`Thành phố : ${currentWeather.city}, ${currentWeather.country}`)
 
@@ -147,22 +153,22 @@ async function drawForecastChart(data,lables) {
 
         // vẽ cộtx
         if(index === 0) {
-            drawTable(ctx,temp,bar_width,realheight-padding,"red",padding,spacing,date);
+            drawTable(ctx,temp,bar_width,realheight-padding,"red",padding,spacing,date,"°C");
         }else if(index == 1) {
-             drawTable(ctx,humidity,bar_width,realheight-padding,"blue",padding,spacing,date);
+             drawTable(ctx,humidity,bar_width,realheight-padding,"blue",padding,spacing,date,"%");
         }else if(index == 2) {
-             drawTable(ctx,wind,bar_width,realheight-padding,"green",padding,spacing,date);
+             drawTable(ctx,wind,bar_width,realheight-padding,"green",padding,spacing,date," km/h");
         }
     })
 }
 
 function drawTitle(ctx,lables,can) {
     ctx.font = "14px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(lables, can.width / 2, 10);
+    ctx.textAlign = "right";
+    ctx.fillText(lables, can.width * 2/3, 10);
 }
 
-function drawTable(ctx, number, width, height, color, padding, spacing,labels) {
+function drawTable(ctx, number, width, height, color, padding, spacing, labels, unit) {
     const maxValue = Math.max(...number);
     number.forEach((val, index) => {
         const heightCol = (val / maxValue) * height;
@@ -182,8 +188,17 @@ function drawTable(ctx, number, width, height, color, padding, spacing,labels) {
         ctx.fillStyle = color;
         ctx.fillRect(x, y, widthCol, heightCol);
 
+        // Hiển thị giá trị trên đầu cột
+        ctx.fillStyle = color;
+        ctx.textBaseline = "bottom";
+        const valueX = x + widthCol / 2;
+        const valueY = y - 5;
+        ctx.fillText(val + unit, valueX, valueY);
+
+        // Hiển thị ngày bên dưới cột
         if (labels && labels[index]) {
             ctx.fillStyle = "#333";
+            ctx.textBaseline = "top";
             
             const labelX = x + widthCol / 2;
             const labelY = padding + height + 5;

@@ -6,6 +6,8 @@ const LANGUAGE = "vi";
 // khi người dùng ấn tìm kiếm theo tên.
 $("#search-button").click(async () => {
   let cityName = $("#input-city").val();
+  console.log(cityName)
+  cityName = normalizeCityName(cityName);
   console.log(cityName);
   if (cityName) {
     const data = await fetchWeatherData(cityName);
@@ -63,6 +65,7 @@ const displayCurrentWeather = async (data) => {
 // phân tích tiếng anh sang tiếng việt bằng call API
 const analyzeEnglish = async (text) => {
   const GEMINI_KEY = "AIzaSyCCnib1cIXOf3IQd6apNoK1rkxd24z-iiQ";
+  // Định danh chuẩn nhất hiện nay cho REST API
   const MODEL = "gemini-2.0-flash-lite";
   const URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${GEMINI_KEY}`;
 
@@ -115,8 +118,11 @@ async function drawForecastChart(data,lables) {
     const wind = forecast.map(({day}) => day.maxwind_kph);
     // console.log(temp,humidity,wind)
     Array.from(canvas, (can,index) => {
-
         const ctx = can.getContext("2d");
+
+        // Xóa canvas cũ trước khi vẽ mới
+        ctx.clearRect(0, 0, can.width, can.height);
+
         const height = can.height;
         const width = can.width;
         // padding giữa hai lề và khoảng cách giữa hai bên
@@ -186,3 +192,24 @@ function drawTable(ctx, number, width, height, color, padding, spacing,labels) {
         }
     });
 }
+
+const normalizeCityName = (cityName) => {
+  if (!cityName) return "";
+
+  // chuyển về chữ thường
+  let str = cityName.toLowerCase().trim();
+
+  // loại bỏ dấu do API này không nhận từ có dấu.
+  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+  str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+  str = str.replace(/đ/g, "d");
+
+  return str
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
